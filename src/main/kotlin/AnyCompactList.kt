@@ -1,3 +1,6 @@
+@file:JvmMultifileClass
+@file:JvmName("CompactListKt")
+
 package dev.whyoleg.testtask
 
 @PublishedApi

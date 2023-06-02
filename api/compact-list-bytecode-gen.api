@@ -1,0 +1,12 @@
+public abstract interface class dev/whyoleg/testtask/CompactList {
+	public abstract fun add (Ljava/lang/Object;)V
+	public abstract fun get (I)Ljava/lang/Object;
+	public abstract fun getSize ()I
+}
+
+public final class dev/whyoleg/testtask/CompactListKt {
+	public static final fun newAnyCompactList (I)Ldev/whyoleg/testtask/CompactList;
+	public static final fun newCompactList (ILkotlin/reflect/KClass;)Ldev/whyoleg/testtask/CompactList;
+	public static final fun newIntCompactList (I)Ldev/whyoleg/testtask/CompactList;
+}
+

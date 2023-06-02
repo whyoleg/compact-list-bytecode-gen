@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "1.8.21"
+    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.13.1"
 }
 
 kotlin {
