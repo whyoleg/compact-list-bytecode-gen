@@ -14,3 +14,5 @@ public inline fun <reified T> newCompactList(initialSize: Int = 16): CompactList
         else -> newAnyCompactList(initialSize)
     }
 }
+
+internal const val DEFAULT_SIZE = 16

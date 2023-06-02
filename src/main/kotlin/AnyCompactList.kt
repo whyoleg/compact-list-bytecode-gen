@@ -15,7 +15,7 @@ internal class AnyCompactList<T>(initialSize: Int) : CompactList<T> {
         if (size >= values.size) {
             val newSize = when {
                 // if `initialSize` was 0, we resize to some default=16
-                values.isEmpty() -> 16
+                values.isEmpty() -> DEFAULT_SIZE
                 // if not, double the size of underlying array
                 else -> values.size * 2
             }
