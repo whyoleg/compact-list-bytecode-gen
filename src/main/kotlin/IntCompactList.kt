@@ -51,7 +51,7 @@ private object IntCompactListClassLoader : ClassLoader(CompactList::class.java.c
             visitField(ACC_PRIVATE, "values", intArrayDescriptor, null, null).visitEnd()
 
             // declare constructor(initialSize: Int)
-            visitMethod(ACC_PUBLIC, "<init>", Type.getMethodDescriptor(Type.VOID_TYPE, Type.INT_TYPE), null, null).visiting {
+            visitMethod("<init>", Type.getMethodDescriptor(Type.VOID_TYPE, Type.INT_TYPE)) {
                 val varIndexOfInitialSize = 1 // index of `initialSize` constructor parameter
                 // call Object constructor
                 visitVarInsn(ALOAD, 0)
@@ -66,26 +66,26 @@ private object IntCompactListClassLoader : ClassLoader(CompactList::class.java.c
             }
 
             // declare getSize method - getter of `size` property
-            visitMethod(ACC_PUBLIC, "getSize", Type.getMethodDescriptor(Type.INT_TYPE), null, null).visiting {
+            visitMethod("getSize", Type.getMethodDescriptor(Type.INT_TYPE)) {
                 visitVarInsn(ALOAD, 0)
                 visitFieldInsn(GETFIELD, className, "size", intDescriptor)
                 visitInsn(IRETURN)
             }
 
-            // add(Int) method
-            visitMethod(ACC_PUBLIC, "add", "(Ljava/lang/Object;)V", null, null).visiting {
+            // delcare add(value: Int) method (in reality, value is of type Object, because we have generics)
+            visitMethod("add", Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Any::class.java))) {
                 val varIndexOfValue = 1  // index of `value` parameter
 
                 val varIndexOfValues = 2  // index of `values` local variable
                 // store `values` field into local variable
                 visitVarInsn(ALOAD, 0)
-                visitFieldInsn(GETFIELD, className, "values", "[I")
+                visitFieldInsn(GETFIELD, className, "values", intArrayDescriptor)
                 visitVarInsn(ASTORE, varIndexOfValues)
 
                 val varIndexOfSize = 3 // index of `size` local variable
                 // store `size` field into local variable
                 visitVarInsn(ALOAD, 0)
-                visitFieldInsn(GETFIELD, className, "size", "I")
+                visitFieldInsn(GETFIELD, className, "size", intDescriptor)
                 visitVarInsn(ISTORE, varIndexOfSize)
 
                 val varIndexOfValuesSize = 4 // index of `values.size` local variable
@@ -139,13 +139,13 @@ private object IntCompactListClassLoader : ClassLoader(CompactList::class.java.c
                 visitVarInsn(ILOAD, varIndexOfNewSize)
                 visitMethodInsn(INVOKESTATIC, "java/util/Arrays", "copyOf", "([II)[I", false)
                 // save the new array to `values` field
-                visitFieldInsn(PUTFIELD, className, "values", "[I")
+                visitFieldInsn(PUTFIELD, className, "values", intArrayDescriptor)
 
                 visitLabel(noNeedToGrowLabel)
 
                 // equivalent of values[size] = ((Number) value).intValue()
                 visitVarInsn(ALOAD, 0)
-                visitFieldInsn(GETFIELD, className, "values", "[I")
+                visitFieldInsn(GETFIELD, className, "values", intArrayDescriptor)
                 visitVarInsn(ILOAD, varIndexOfSize)
                 visitVarInsn(ALOAD, varIndexOfValue)
                 // cast Object to Number and then get primitive `int` value, as we have `int[]` underlying array
@@ -159,12 +159,12 @@ private object IntCompactListClassLoader : ClassLoader(CompactList::class.java.c
                 visitInsn(ICONST_1)
                 visitInsn(IADD)
                 // save incremented size
-                visitFieldInsn(PUTFIELD, className, "size", "I")
+                visitFieldInsn(PUTFIELD, className, "size", intDescriptor)
                 visitInsn(RETURN)
             }
 
             // declare add(index: Int): Int method (in reality, it returns Object, because we have generics)
-            visitMethod(ACC_PUBLIC, "get", Type.getMethodDescriptor(Type.getType(Any::class.java), Type.INT_TYPE), null, null).visiting {
+            visitMethod("get", Type.getMethodDescriptor(Type.getType(Any::class.java), Type.INT_TYPE)) {
                 val varIndexOfIndex = 1  // index of `index` function parameter
 
                 val varIndexOfSize = 2  // index of `size` local variable
@@ -186,7 +186,7 @@ private object IntCompactListClassLoader : ClassLoader(CompactList::class.java.c
 
                 //load value by `index` parameter from `values` field
                 visitVarInsn(ALOAD, 0)
-                visitFieldInsn(GETFIELD, className, "values", "[I")
+                visitFieldInsn(GETFIELD, className, "values", intArrayDescriptor)
                 visitVarInsn(ILOAD, varIndexOfIndex)
                 visitInsn(IALOAD)
                 // convert primitive `int` to object `Integer` - because of generics
@@ -204,7 +204,7 @@ private object IntCompactListClassLoader : ClassLoader(CompactList::class.java.c
                 visitTypeInsn(NEW, stringBuilderDescriptor)
                 visitInsn(DUP)
                 // call StringBuilder constructor
-                visitMethodInsn(INVOKESPECIAL, stringBuilderDescriptor, "<init>", Type.getMethodDescriptor(Type.VOID_TYPE), false)
+                visitMethodInsn(INVOKESPECIAL, stringBuilderDescriptor, "<init>", "()V", false)
                 // append first constant string
                 visitLdcInsn("Index ")
                 visitMethodInsn(INVOKEVIRTUAL, stringBuilderDescriptor, "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false)
@@ -225,6 +225,10 @@ private object IntCompactListClassLoader : ClassLoader(CompactList::class.java.c
         }.also(ClassWriter::visitEnd)
 
         return writer.toByteArray()
+    }
+
+    private inline fun ClassVisitor.visitMethod(name: String, descriptor: String, block: MethodVisitor.() -> Unit) {
+        visitMethod(ACC_PUBLIC, name, descriptor, null, null).visiting(block)
     }
 
     private inline fun MethodVisitor.visiting(block: MethodVisitor.() -> Unit) {
