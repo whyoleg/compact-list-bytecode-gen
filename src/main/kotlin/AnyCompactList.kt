@@ -15,6 +15,7 @@ internal class AnyCompactList<T>(initialSize: Int) : CompactList<T> {
     private var values = arrayOfNulls<Any?>(initialSize) as Array<T?>
 
     override fun add(value: T) {
+        // check if we need to resize `values` array
         if (size >= values.size) {
             val newSize = when {
                 // if `initialSize` was 0, we resize to some default=16
@@ -22,10 +23,11 @@ internal class AnyCompactList<T>(initialSize: Int) : CompactList<T> {
                 // if not, double the size of underlying array
                 else -> values.size * 2
             }
-            // if overflowed - fail
+            // if overflowed - fail with OOM
             if (newSize < 0) throw OutOfMemoryError("Required size exceeds implementation limit")
             values = values.copyOf(newSize)
         }
+        // save value and increment size
         values[size] = value
         size += 1
     }
@@ -33,6 +35,7 @@ internal class AnyCompactList<T>(initialSize: Int) : CompactList<T> {
     override fun get(index: Int): T {
         if (index < 0 || index >= size) throw IndexOutOfBoundsException("Index $index out of bounds for size $size")
 
+        // we always sure at this point that there is a value with specified index, and it's of correct type
         @Suppress("UNCHECKED_CAST")
         return values[index] as T
     }
